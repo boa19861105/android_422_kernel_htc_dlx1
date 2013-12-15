@@ -8875,6 +8875,7 @@ static void wl_cfg80211_hotspot_event_process(struct net_device *ndev, const wl_
 			printf("STA connect received %d\n", event_type);
 			wl_cfg80211_send_priv_event(ndev, "STA_JOIN");
 			break;
+                case WLC_E_DEAUTH:
 		case WLC_E_DEAUTH_IND:
 		case WLC_E_DISASSOC_IND:
 			printf("STA disconnect received %d\n", event_type);
