@@ -23,9 +23,7 @@ enum charger_type_t {
 	CHARGER_AC,
 	CHARGER_9V_AC,
 	CHARGER_WIRELESS,
-	CHARGER_MHL_AC,
-	CHARGER_DETECTING,
-	CHARGER_UNKNOWN_USB,
+	CHARGER_MHL_AC
 };
 
 enum power_supplies_type {
