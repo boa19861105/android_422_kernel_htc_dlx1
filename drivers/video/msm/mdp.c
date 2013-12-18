@@ -2118,6 +2118,9 @@ static int mdp_on(struct platform_device *pdev)
 
 	mdp_histogram_ctrl_all(TRUE);
 
+	if (mdp_pdata->mdp_gamma)
+		mdp_pdata->mdp_gamma();
+
 #ifdef CONFIG_ARCH_MSM8X60
 	if (mfd->panel.type == MIPI_CMD_PANEL)
 		mdp4_dsi_cmd_vsync_ctrl(NULL,1);
@@ -2311,6 +2314,42 @@ static int mdp_irq_clk_setup(struct platform_device *pdev,
 	MSM_FB_DEBUG("mdp_clk: mdp_clk=%d\n", (int)clk_get_rate(mdp_clk));
 #endif
 	return 0;
+}
+static int
+mdp_write_reg_mask(uint32_t reg, uint32_t val, uint32_t mask)
+{
+        uint32_t oldval, newval;
+
+        oldval = inpdw(MDP_BASE + reg);
+
+        oldval &= (~mask);
+        val &= mask;
+        newval = oldval | val;
+
+        outpdw(MDP_BASE + reg, newval);
+
+        return 0;
+
+}
+
+void mdp_color_enhancement(const struct mdp_reg *reg_seq, int size)
+{
+        int i;
+
+        printk(KERN_INFO "%s\n", __func__);
+
+	mdp_clk_ctrl(1);
+	mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_ON, FALSE);
+        for (i = 0; i < size; i++) {
+                if (reg_seq[i].mask == 0x0)
+                        outpdw(MDP_BASE + reg_seq[i].reg, reg_seq[i].val);
+                else
+                        mdp_write_reg_mask(reg_seq[i].reg, reg_seq[i].val, reg_seq[i].mask);
+        }
+	mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
+	mdp_clk_ctrl(0);
+
+        return ;
 }
 
 static int mdp_probe(struct platform_device *pdev)
@@ -2546,6 +2585,7 @@ static int mdp_probe(struct platform_device *pdev)
 			mfd->dma = &dma_e_data;
 		}
 		mdp4_display_intf_sel(if_no, DSI_VIDEO_INTF);
+		mdp4_overlay_panel_mode(0, MDP4_PANEL_DSI_VIDEO);
 #else
 		pdata->on = mdp_dsi_video_on;
 		pdata->off = mdp_dsi_video_off;
@@ -2594,6 +2634,7 @@ static int mdp_probe(struct platform_device *pdev)
 		outp32(MDP_INTR_ENABLE, mdp_intr_mask);
 		spin_unlock_irqrestore(&mdp_spin_lock, flag);
 		mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
+		mdp4_overlay_panel_mode(0, MDP4_PANEL_DSI_CMD);
 #else
 
 		mfd->dma_fnc = mdp_dma2_update;

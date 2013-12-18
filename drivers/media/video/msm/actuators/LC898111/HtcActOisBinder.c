@@ -248,32 +248,29 @@ void HtcActOisBinder_open_init(void)
 		ois_data_32 = (g_otp_data[28] << 24) + (g_otp_data[29] << 16) + (g_otp_data[30] << 8) + g_otp_data[31];
 		RamWrite32A(0x1928, ois_data_32); 
 
-
 		
 		ois_data_8 = g_otp_data[32];
 		RegWriteA_lc898111(0x0264, ois_data_8); 
 	}
 
 
-#if 0
 	
 	
 	RamWrite32A( 0x1808, 0x3F99999A ) ;	
 	RamWrite32A( 0x1809, 0x3F99999A ) ;	
 	RamWrite32A( 0x1908, 0x3F99999A ) ;	
 	RamWrite32A( 0x1909, 0x3F99999A ) ;	
-#endif
 
 
 	RtnCen(0); 
 	
-	SetPanTiltMode(ON);
+
 
 	pr_info("[OIS]  %s  g_ois_mode=%d\n", __func__, g_ois_mode);
 	if (g_ois_mode != 0) {
 		ClrGyr(0x06, CLR_GYR_DLY_RAM);
 		OisEna(); 
-		SetGcf(5); 
+		SetGcf(4); 
 	}
 	
 
@@ -408,7 +405,7 @@ int32_t HtcActOisBinder_act_set_ois_mode(int ois_mode)
 	if (ois_mode != 0) {
 		ClrGyr(0x06, CLR_GYR_DLY_RAM);
 		OisEna(); 
-		SetGcf(5); 
+		SetGcf(4); 
 	}
 
 	return rc;
@@ -422,7 +419,6 @@ int32_t HtcActOisBinder_mappingTbl_i2c_write(int startup_mode, struct sensor_act
 	uint32_t cur_line_cnt = 0;
 	uint32_t cur_exp_time = 0;
 	int32_t cur_zoom_level = 0;
-	uint16_t cur_cmp_angle = 600;
 	uint16_t cur_ois_level = 5;
 	uint16_t ois_off = 0;
 
@@ -440,18 +436,18 @@ int32_t HtcActOisBinder_mappingTbl_i2c_write(int startup_mode, struct sensor_act
 	cur_exp_time = sensor_actuator_info->cur_exp_time;
 	cur_zoom_level = sensor_actuator_info->zoom_level;
 
+
 	if (cur_cam_mode == CAM_MODE_CAMERA_PREVIEW) {
 
-		cur_cmp_angle = 600;
 		if (cur_exp_time >= (1000/24)) {
 			cur_ois_level = 6;
-			cur_cmp_angle = 700;
+
 		} else if (cur_exp_time >= (1000/48)) {
 			cur_ois_level = 5;
-			cur_cmp_angle = 600;
+
 		} else if (cur_exp_time >= (1000/83)) {
 			cur_ois_level = 4;
-			cur_cmp_angle = 600;
+
 		} else {
 			ois_off = 1;
 		}
@@ -487,45 +483,18 @@ int32_t HtcActOisBinder_mappingTbl_i2c_write(int startup_mode, struct sensor_act
 		if (cur_exp_time >= (1000/24)) {
 			cur_ois_level= 6;
 		} else if (cur_exp_time >= (1000/48)) {
-			cur_ois_level= 5;
+			cur_ois_level= 6;
 		} else if (cur_exp_time >= (1000/83)) {
 			cur_ois_level= 5;
 		} else {
 			cur_ois_level= 5;
 		}
-		cur_cmp_angle = 600;
 
 		if (cur_zoom_level >= 45) {
-			if (cur_exp_time >= (1000/24)) {
-				cur_ois_level = 6;
-				cur_cmp_angle = 700;
-			} else if (cur_exp_time >= (1000/48)) {
-				cur_ois_level = 5;
-				cur_cmp_angle = 700;
-			} else if (cur_exp_time >= (1000/83)) {
-				cur_ois_level = 5;
-				cur_cmp_angle = 700;
-			} else {
-				cur_ois_level = 5;
-				cur_cmp_angle = 600;
-			}
-		} else if (cur_zoom_level >= 30) {
-			if (cur_exp_time >= (1000/24)) {
-				cur_ois_level = 6;
-				cur_cmp_angle = 700;
-			} else {
-				cur_ois_level = 5;
-				cur_cmp_angle = 600;
-			}
-		} else if (cur_zoom_level >= 15) {
+			cur_ois_level = 6;
 
-			if (cur_exp_time >= (1000/24)) {
-				cur_ois_level = 6;
-				cur_cmp_angle = 700;
-			} else {
-				cur_ois_level = 5;
-				cur_cmp_angle = 600;
-			}
+		} else if (cur_zoom_level >= 30) {
+			cur_ois_level = 6;
 		}
 
 		if (board_mfg_mode()) {
@@ -533,49 +502,18 @@ int32_t HtcActOisBinder_mappingTbl_i2c_write(int startup_mode, struct sensor_act
 			cur_ois_level= 5;
 		}
 	} else {
-		cur_ois_level= 5;
+		cur_ois_level= 4;
 	}
 
+#if 0
 	pr_info("[OIS] ois_off=%d, cur_cam_mode=%d,  cur_line_cnt=%d, cur_exp_time=%d, cur_ois_level=%d, cur_zoom_level=%d\n",
 		ois_off,  cur_cam_mode, cur_line_cnt, cur_exp_time, cur_ois_level, cur_zoom_level);
 
-	if (ois_off) {
-		
-		cur_ois_level= 0;
+	if ((cur_ois_level >= 0) && (cur_ois_level <= 6))
+	{
+		pr_info("[OIS]  set OIS level : %d\n", cur_ois_level);
+		SetGcf(cur_ois_level); 
 	}
-
-
-		if ((cur_ois_level >= 0) && (cur_ois_level <= 6))
-		{
-			pr_info("[OIS]  set OIS level : %d\n", cur_ois_level);
-			SetGcf(cur_ois_level); 
-		}
-
-#if 0
-		if (cur_cmp_angle == 800) {
-			pr_info("[OIS]  Apply Compensation angle as 0.8deg\n");
-			
-			RamWrite32A( 0x1808, 0x3FD1EB85 ) ;	
-			RamWrite32A( 0x1809, 0x3FD1EB85 ) ;	
-			RamWrite32A( 0x1908, 0x3FD1EB85 ) ;	
-			RamWrite32A( 0x1909, 0x3FD1EB85 ) ;	
-		} else if (cur_cmp_angle == 700) {
-			pr_info("[OIS]  Apply Compensation angle as 0.7deg\n");
-			
-			RamWrite32A( 0x1808, 0x3FB33333 ) ;	
-			RamWrite32A( 0x1809, 0x3FB33333 ) ;	
-			RamWrite32A( 0x1908, 0x3FB33333 ) ;	
-			RamWrite32A( 0x1909, 0x3FB33333 ) ;	
-		} else if (cur_cmp_angle == 600) {
-			pr_info("[OIS]  Apply Compensation angle as 0.6deg\n");
-			
-			RamWrite32A( 0x1808, 0x3F99999A ) ;	
-			RamWrite32A( 0x1809, 0x3F99999A ) ;	
-			RamWrite32A( 0x1908, 0x3F99999A ) ;	
-			RamWrite32A( 0x1909, 0x3F99999A ) ;	
-		} else {
-			pr_info("[OIS]  Apply Compensation angle : value is not allowed\n");
-		}
 #endif
 
 	return rc;

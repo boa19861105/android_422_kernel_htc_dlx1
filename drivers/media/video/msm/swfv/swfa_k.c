@@ -50,11 +50,6 @@ int swfa_FeatureAnalysis(uint8_t* pCurBuffer, int nImgWidth, int nImgHeight, int
 	if(!pCurBuffer || (nROIW<16) || (nROIH<16)){
 		return 0;
 	}
-
-	if((nROIX + nROIW > nImgWidth) || (nROIY + nROIH > nImgHeight)){
-		return 0;
-	}
-
 	
 	if(bRefineROI==0){
 		nNewROIX = nROIX;

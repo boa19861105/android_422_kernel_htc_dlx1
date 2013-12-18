@@ -26,10 +26,6 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
-#if defined(CONFIG_PWRKEY_STATUS_API) || defined(CONFIG_PWRKEY_WAKESRC_LOG)
-#include <linux/module.h>
-#endif
-
 #ifdef CONFIG_POWER_KEY_LED
 #include <linux/leds-pm8921.h>
 
@@ -96,20 +92,13 @@ static ssize_t vol_wakeup_show(struct device *dev,
 
 static DEVICE_ATTR(vol_wakeup, 0664, vol_wakeup_show, vol_wakeup_store);
 
-#ifdef CONFIG_PWRKEY_WAKESRC_LOG
-static uint16_t power_key_gpio;
-uint16_t get_power_key_gpio(void)
-{
-	return power_key_gpio;
-}
-EXPORT_SYMBOL(get_power_key_gpio);
-#endif
 
 #ifdef CONFIG_PWRKEY_STATUS_API
 static uint8_t power_key_state;
 static spinlock_t power_key_state_lock;
 
 #define PWRKEY_PRESS_DUE 1*HZ
+#include <linux/module.h>
 static void init_power_key_api(void)
 {
 	spin_lock_init(&power_key_state_lock);
@@ -683,10 +672,6 @@ static int gpio_event_input_request_irqs(struct gpio_input_state *ds)
 		if (err < 0)
 			goto err_gpio_get_irq_num_failed;
 		if (ds->info->keymap[i].code == KEY_POWER) {
-#ifdef CONFIG_PWRKEY_WAKESRC_LOG
-			power_key_gpio = ds->info->keymap[i].gpio;
-			KEY_LOGI("Power Key gpio = %d", power_key_gpio);
-#endif
 			power_key_intr_flag = 0;
 			value = gpio_get_value(ds->info->keymap[i].gpio);
 			req_flags = value ? IRQF_TRIGGER_FALLING: IRQF_TRIGGER_RISING;

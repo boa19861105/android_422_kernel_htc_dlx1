@@ -704,12 +704,6 @@ static void sre_do_work(struct work_struct *work)
 static void sre_update(unsigned long data)
 {
    struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)data;
-
-   if (!mfd->panel_power_on) {
-	PR_DISP_INFO("%s: skip sre_work\n", __func__);
-	return;
-   }
-
    queue_work(mfd->sre_wq, &mfd->sre_work);
 }
 

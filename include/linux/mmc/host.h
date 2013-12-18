@@ -266,9 +266,7 @@ struct mmc_host {
 	int			bkops_started;
 	int 		hpi_issued;
 	int 		bkops_trigger;
-	int			bkops_check_status;
 	int 		bkops_alarm_set;
-	int			long_bkops;
 	struct mmc_card		*card;		
 
 	wait_queue_head_t	wq;

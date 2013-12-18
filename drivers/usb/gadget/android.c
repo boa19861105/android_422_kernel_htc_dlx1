@@ -78,7 +78,6 @@ static int os_type;
 #endif
 #include "u_ether.c"
 #include "u_bam_data.c"
-#include "f_mbim.c"
 #ifdef CONFIG_USB_ANDROID_NCM
 #include "f_ncm.c"
 #endif
@@ -628,7 +627,9 @@ static struct android_usb_function rmnet_function = {
 	.performance_lock = 1,
 };
 
+#if 0
 #define MAX_MBIM_INSTANCES 1
+
 
 static int mbim_function_init(struct android_usb_function *f,
 					 struct usb_composite_dev *cdev)
@@ -653,6 +654,7 @@ static struct android_usb_function mbim_function = {
 	.bind_config	= mbim_function_bind_config,
 	.init		= mbim_function_init,
 };
+#endif
 
 static char diag_clients[32];	    
 static char diag_string[4][32];
@@ -1241,8 +1243,8 @@ static int ncm_function_bind_config(struct android_usb_function *f,
 		ncm->ethaddr[0], ncm->ethaddr[1], ncm->ethaddr[2],
 		ncm->ethaddr[3], ncm->ethaddr[4], ncm->ethaddr[5]);
 
-    if (c->cdev->gadget)
-        c->cdev->gadget->miMaxMtu = ETH_FRAME_LEN_MAX - ETH_HLEN;
+	if (c->cdev->gadget)
+		c->cdev->gadget->miMaxMtu = 9000;
 	ret = gether_setup_name(c->cdev->gadget, ncm->ethaddr, "usb");
 	if (ret) {
 		pr_err("%s: gether_setup failed\n", __func__);
@@ -1966,7 +1968,6 @@ static struct android_usb_function *supported_functions[] = {
  	&rmnet_sdio_function,
  	&rmnet_smd_sdio_function,
  	&ccid_function,
-	&mbim_function,
 	NULL
 };
 

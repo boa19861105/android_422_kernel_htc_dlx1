@@ -340,7 +340,6 @@ void mdp4_writeback_kickoff_video(struct msm_fb_data_type *mfd,
 	mfd->writeback_active_cnt--;
 	mutex_unlock(&mfd->unregister_mutex);
 	wake_up(&mfd->wait_q);
-
 }
 
 void mdp4_writeback_kickoff_ui(struct msm_fb_data_type *mfd,

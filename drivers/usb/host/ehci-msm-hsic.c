@@ -221,10 +221,14 @@ struct msm_hsic_hcd {
 
 static void ehci_hsic_prevent_sleep(struct msm_hsic_hcd *mehci)
 {
+	s32 latency;
 	if (!in_interrupt()) {
 		if (get_radio_flag() & RADIO_FLAG_USB_UPLOAD)
 			pr_info("%s+\n", __func__);
-		pm_qos_update_request(&mehci->pm_qos_req_dma_htc, msm_cpuidle_get_deep_idle_latency());
+		latency =  msm_cpuidle_get_deep_idle_latency();
+		if (!latency)
+			latency = 2;
+		pm_qos_update_request(&mehci->pm_qos_req_dma_htc, latency);
 		if (get_radio_flag() & RADIO_FLAG_USB_UPLOAD)
 			pr_info("%s-\n", __func__);
 	}
@@ -2344,15 +2348,6 @@ put_hcd:
 	return ret;
 }
 
-#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
-extern int mdm_is_in_restart;
-static void dbg_hsic_usage_count_delay_work_fn(struct work_struct *work)
-{
-    panic("msm_hsic_host usage count is not 0 !!!");
-}
-static DECLARE_DELAYED_WORK(dbg_hsic_usage_count_delay_work, dbg_hsic_usage_count_delay_work_fn);
-#endif 
-
 static int __devexit ehci_hsic_msm_remove(struct platform_device *pdev)
 {
 	struct usb_hcd *hcd = platform_get_drvdata(pdev);
@@ -2406,26 +2401,6 @@ static int __devexit ehci_hsic_msm_remove(struct platform_device *pdev)
 
 	iounmap(hcd->regs);
 	usb_put_hcd(hcd);
-
-	
-	#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
-	if (pdev) {
-		int usage_count = atomic_read(&(pdev->dev.power.usage_count));
-		dev_info(&(pdev->dev), "%s[%d] usage_count is [%d] msm_hsic_host_dev:0x%p &pdev->dev:0x%p mdm_is_in_restart:%d\n",
-			__func__, __LINE__, usage_count, msm_hsic_host_dev, &(pdev->dev), mdm_is_in_restart);
-
-		if (mdm_is_in_restart && usage_count != 0) {
-			pr_info("%s[%d] !!! usage_count:%d is not 0 !!!\n", __func__, __LINE__, usage_count);
-			atomic_set(&(pdev->dev.power.usage_count), 0);
-
-			if (get_radio_flag() & RADIO_FLAG_USB_UPLOAD) {
-				
-				schedule_delayed_work_on(0, &dbg_hsic_usage_count_delay_work, msecs_to_jiffies(300000));
-			}
-		}
-	}
-	#endif
-	
 
 	return 0;
 }

@@ -167,16 +167,13 @@ int32_t msm_sensor_write_init_settings(struct msm_sensor_ctrl_t *s_ctrl)
 	int32_t rc;
 	CDBG("%s: called\n", __func__);
 
-#ifdef CONFIG_RAWCHIPII
 	if ((s_ctrl->sensordata->htc_image == HTC_CAMERA_IMAGE_YUSHANII_BOARD) && (s_ctrl->msm_sensor_reg->init_settings_yushanii))
 	{
 		rc = msm_sensor_write_all_conf_array(
 			s_ctrl->sensor_i2c_client,
 			s_ctrl->msm_sensor_reg->init_settings_yushanii,
 			s_ctrl->msm_sensor_reg->init_size_yushanii);
-	} else
-#endif
-        {
+	} else {
 		rc = msm_sensor_write_all_conf_array(
 			s_ctrl->sensor_i2c_client,
 			s_ctrl->msm_sensor_reg->init_settings,
@@ -265,7 +262,6 @@ void msm_sensor_start_stream(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	CDBG("%s: called\n", __func__);
 
-#ifdef CONFIG_RAWCHIPII
 	if ((s_ctrl->sensordata->htc_image == HTC_CAMERA_IMAGE_YUSHANII_BOARD) && (s_ctrl->msm_sensor_reg->start_stream_conf_yushanii))
 	{
 		msm_camera_i2c_write_tbl(
@@ -273,9 +269,7 @@ void msm_sensor_start_stream(struct msm_sensor_ctrl_t *s_ctrl)
 		s_ctrl->msm_sensor_reg->start_stream_conf_yushanii,
 		s_ctrl->msm_sensor_reg->start_stream_conf_size_yushanii,
 		s_ctrl->msm_sensor_reg->default_data_type);
-	} else
-#endif
-        {
+	} else {
 		msm_camera_i2c_write_tbl(
 		s_ctrl->sensor_i2c_client,
 		s_ctrl->msm_sensor_reg->start_stream_conf,
@@ -288,7 +282,6 @@ void msm_sensor_stop_stream(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	CDBG("%s: called\n", __func__);
 
-#ifdef CONFIG_RAWCHIPII
 	if ((s_ctrl->sensordata->htc_image == HTC_CAMERA_IMAGE_YUSHANII_BOARD) && (s_ctrl->msm_sensor_reg->stop_stream_conf_yushanii))
 	{
 		msm_camera_i2c_write_tbl(
@@ -296,9 +289,7 @@ void msm_sensor_stop_stream(struct msm_sensor_ctrl_t *s_ctrl)
 		s_ctrl->msm_sensor_reg->stop_stream_conf_yushanii,
 		s_ctrl->msm_sensor_reg->stop_stream_conf_size_yushanii,
 		s_ctrl->msm_sensor_reg->default_data_type);
-	} else
-#endif
-        {
+	} else {
 		msm_camera_i2c_write_tbl(
 		s_ctrl->sensor_i2c_client,
 		s_ctrl->msm_sensor_reg->stop_stream_conf,
@@ -699,6 +690,13 @@ int32_t msm_sensor_setting_parallel(struct msm_sensor_ctrl_t *s_ctrl,
 
 		
 		mutex_lock(s_ctrl->sensor_first_mutex);
+
+#ifdef CONFIG_RAWCHIPII
+		if(YushanII_Get_reloadInfo() == 0){
+			pr_info("stop YushanII first");
+			Ilp0100_stop();
+		}
+#endif
 		v4l2_subdev_notify(&s_ctrl->sensor_v4l2_subdev,
 			NOTIFY_ISPIF_STREAM, (void *)ISPIF_STREAM(
 			PIX_0, ISPIF_OFF_IMMEDIATELY));
@@ -1310,16 +1308,14 @@ int32_t msm_sensor_get_output_info(struct msm_sensor_ctrl_t *s_ctrl,
             s_ctrl->msm_sensor_reg->output_settings[i].y_output -= 1;
 
 	
-#ifdef CONFIG_RAWCHIPII	 
+	 
 	if ((s_ctrl->sensordata->htc_image == HTC_CAMERA_IMAGE_YUSHANII_BOARD) && (s_ctrl->msm_sensor_reg->output_settings_yushanii)) {
 		if (copy_to_user((void *)sensor_output_info->output_info,
 			s_ctrl->msm_sensor_reg->output_settings_yushanii,
 			sizeof(struct msm_sensor_output_info_t) *
 			s_ctrl->msm_sensor_reg->num_conf))
 			rc = -EFAULT;
-	} else
-#endif
-       {
+	} else {
 		if (copy_to_user((void *)sensor_output_info->output_info,
 			s_ctrl->msm_sensor_reg->output_settings,
 			sizeof(struct msm_sensor_output_info_t) *
@@ -1752,8 +1748,8 @@ int32_t msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	int32_t rc = 0;
 	uint16_t chipid = 0;
-#if defined(CONFIG_MACH_MONARUDO) || defined(CONFIG_MACH_DELUXE_UB1) || defined(CONFIG_MACH_DELUXE_R) || defined(CONFIG_MACH_DUMMY)\
-		|| defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_MONARUDO) || defined(CONFIG_MACH_DELUXE_J) || defined(CONFIG_MACH_DELUXE_R) || defined(CONFIG_MACH_IMPRESSION_J)\
+		|| defined(CONFIG_MACH_DELUXE_U) || defined(CONFIG_MACH_DELUXE_UL) || defined(CONFIG_MACH_DELUXE_UB1)
 	int i=1;
 #else
 	int i=10;
@@ -1800,8 +1796,8 @@ int32_t msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 		}
 #endif
 	if (chipid != s_ctrl->sensor_id_info->sensor_id) {
-#if defined(CONFIG_MACH_MONARUDO) || defined(CONFIG_MACH_DELUXE_UB1) || defined(CONFIG_MACH_DELUXE_R) || defined(CONFIG_MACH_DUMMY)\
-    || defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY)
+#if defined(CONFIG_MACH_MONARUDO) || defined(CONFIG_MACH_DELUXE_J) || defined(CONFIG_MACH_DELUXE_R) || defined(CONFIG_MACH_IMPRESSION_J)\
+    || defined(CONFIG_MACH_DELUXE_U) || defined(CONFIG_MACH_DELUXE_UL)
 		if (chipid == 0x174 && s_ctrl->sensor_id_info->sensor_id == 0x175)
 		{
 			
@@ -2095,73 +2091,3 @@ int msm_sensor_enable_debugfs(struct msm_sensor_ctrl_t *s_ctrl)
 
 	return 0;
 }
-
-#include <linux/fs.h>
-#include <linux/file.h>
-#include <linux/vmalloc.h>
-#include <asm/segment.h>
-#include <asm/uaccess.h>
-#include <linux/buffer_head.h>
-
-void msm_fclose(struct file* file) {
-    filp_close(file, NULL);
-}
-
-int msm_fwrite(struct file* file, unsigned long long offset, unsigned char* data, unsigned int size) {
-    mm_segment_t oldfs;
-    int ret;
-
-    oldfs = get_fs();
-    set_fs(get_ds());
-
-    ret = vfs_write(file, data, size, &offset);
-
-    set_fs(oldfs);
-    return ret;
-}
-
-struct file* msm_fopen(const char* path, int flags, int rights) {
-    struct file* filp = NULL;
-    mm_segment_t oldfs;
-    int err = 0;
-
-    oldfs = get_fs();
-    set_fs(get_ds());
-    filp = filp_open(path, flags, rights);
-    set_fs(oldfs);
-    if(IS_ERR(filp)) {
-        err = PTR_ERR(filp);
-    pr_err("[CAM]File Open Error:%s",path);
-        return NULL;
-    }
-    if(!filp->f_op){
-    pr_err("[CAM]File Operation Method Error!!");
-    return NULL;
-    }
-
-    return filp;
-}
-void msm_dump_otp_to_file(const char* sensor_name, const short* add, const uint8_t* data, size_t count)  
-{  
-    uint8_t *path= "/data/otp.txt";  
-    struct file* f = msm_fopen (path, O_CREAT|O_RDWR|O_TRUNC, 0666);  
-    char buf[512];  
-    int i=0;  
-    int len=0,offset=0;  
-    pr_info ("%s\n",__func__);  
-  
-    if (f) {  
-        len = sprintf (buf,"%s\n",sensor_name);  
-        msm_fwrite (f,offset,buf,len);  
-        offset += len;  
-  
-        for (i=0; i<count; ++i) {  
-            len = sprintf (buf,"0x%x 0x%x\n",add[i],data[i]);  
-            msm_fwrite (f,offset,buf,len);  
-            offset += len;  
-        }  
-        msm_fclose (f);  
-    } else {  
-        pr_err ("%s: fail to open file\n", __func__);  
-    }  
-} 

@@ -127,7 +127,7 @@ extern int board_mfg_mode(void);
 #ifdef CONFIG_APQ8064_ONLY 
 extern unsigned long acpuclk_krait_power_collapse(void);
 #endif
-#if defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DELUXE_UB1)
+#if defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY)
 extern int dlp_ext_buck_en(int);
 #endif
 #define CPU_FOOT_PRINT_MAGIC				0xACBDFE00
